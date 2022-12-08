@@ -16,17 +16,17 @@ def extract():
         # conexion con db
         conn = connection.set_up_conn()
         netflix = pd.read_sql("SELECT * from netflix", conn)[
-            ['title', 'type', 'release_year', 'age_certification', 'production_countries', 'runtime', 'seasons']]
+            ['title', 'type', 'description', 'release_year', 'age_certification', 'production_countries', 'runtime', 'seasons']]
         disney = pd.read_sql("SELECT * from disney_plus_titles", conn)[
-            ['title', 'type', 'release_year', 'rating', 'country', 'duration']]
+            ['title', 'type', 'description', 'release_year', 'rating', 'country', 'duration']]
         imdbMovies = pd.read_sql("SELECT * from imdb_top_1000", conn)
         imdbSeries = pd.read_sql("SELECT * from IMDbSeries", conn)
     else:
         print("Connection with database disabled. Reading data from CSV")
         netflix = pd.read_csv('datos/titles.csv')[
-            ['title', 'type', 'release_year', 'age_certification', 'production_countries', 'runtime', 'seasons']]
+            ['title', 'type', 'description', 'release_year', 'age_certification', 'production_countries', 'runtime', 'seasons']]
         disney = pd.read_csv('datos/disney_plus_titles.csv')[
-            ['title', 'type', 'release_year', 'rating', 'country', 'duration']]
+            ['title', 'type', 'description', 'release_year', 'rating', 'country', 'duration']]
         imdbMovies = pd.read_csv('datos/imdb_top_1000.csv')
         imdbSeries = pd.read_csv('datos/series_data.csv')
 
@@ -35,7 +35,7 @@ def extract():
 def transform(netflix, disney, imdbMovies, imdbSeries):
     print("Tansforming...")
     # Rename Disney columns to match Netflix, set up auxiliary structures
-    disney.columns = ['title', 'type', 'release_year', 'age_certification', 'production_countries', 'runtime']
+    disney.columns = ['title', 'type', 'description', 'release_year', 'age_certification', 'production_countries', 'runtime']
     available_on = []
     netflix["imdb_rating"] = "N/A"
     disney["imdb_rating"] = "N/A"
@@ -94,7 +94,30 @@ def load(result):
     print("Loading...")
     database_enabled = config.get('DatabaseSection', 'use.database') == 'True'
     if database_enabled:
-        pass ## result.to_sql()
+        dbname = config.get('DatabaseSection', 'database.dbname')
+        conn = connection.set_up_conn()
+        cursor = conn.cursor()
+        cursor.execute(f"""IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='TvShowsAndMoviesWithRating' and xtype='U') 
+                            CREATE TABLE TvShowsAndMoviesWithRating (
+                            title VARCHAR(200),
+                            type VARCHAR(10),
+                            description VARCHAR(2000),
+                            release_year INT,
+                            age_certification VARCHAR(50),
+                            production_countries VARCHAR(500),
+                            runtime VARCHAR(50),
+                            imdb_rating FLOAT,
+                            available_on VARCHAR(50)
+                            )
+                            """)
+        conn.commit()
+        for index, row in result.iterrows():
+            cursor.execute(f"INSERT INTO {dbname}.dbo.TvShowsAndMoviesWithRating (title,type,description,release_year,age_certification,\
+                            production_countries,runtime,imdb_rating,available_on) values(?,?,?,?,?,?,?,?,?)",
+                           row.title, row.type, row.description, row.release_year, row.age_certification, row.production_countries,
+                           row.runtime, row.imdb_rating, row.available_on)
+        conn.commit()
+        cursor.close()
     else:
         result.to_csv('datos/resultado.csv')
 

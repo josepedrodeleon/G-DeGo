@@ -35,7 +35,7 @@ def produced_in_uruguay():
     return result
     
 if __name__ == '__main__':
-    if str(input("Run ETL? (yes/no)\n")).lower() == "yes":
+    if str(input("Run ETL? (y/n)\n")).lower() == "y":
         print("Running ETL, please wait...")
         dataset.run_etl()
     else:

@@ -97,8 +97,11 @@ def load(result):
         dbname = config.get('DatabaseSection', 'database.dbname')
         conn = connection.set_up_conn()
         cursor = conn.cursor()
-        cursor.execute(f"""IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='TvShowsAndMoviesWithRating' and xtype='U') 
-                            CREATE TABLE TvShowsAndMoviesWithRating (
+        cursor.execute(f""" IF OBJECT_ID(N'{dbname}.dbo.TvShowsAndMoviesWithRating', N'U') IS NOT NULL  
+                      DROP TABLE {dbname}.dbo.TvShowsAndMoviesWithRating""")
+        #IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='TvShowsAndMoviesWithRating' and xtype='U'
+        conn.commit()
+        cursor.execute(f"""CREATE TABLE TvShowsAndMoviesWithRating (
                             title VARCHAR(200),
                             type VARCHAR(10),
                             description VARCHAR(2000),
@@ -106,7 +109,7 @@ def load(result):
                             age_certification VARCHAR(50),
                             production_countries VARCHAR(500),
                             runtime VARCHAR(50),
-                            imdb_rating FLOAT,
+                            imdb_rating VARCHAR(10),
                             available_on VARCHAR(50)
                             )
                             """)

@@ -1,14 +1,20 @@
 import pandas as pd
 import configparser
 from utils import connection
-
+import datasetsETL as dataset
 # Set up configs
 config = configparser.RawConfigParser()
 config.read('application.properties')
 
-if False: ##config.get('DatabaseSection', 'use.database') == 'True':
+if config.get('DatabaseSection', 'use.database') == 'True':
     conn = connection.set_up_conn()
-    result = pd.read_sql("SELECT * from resultado", conn)
+    dbname = config.get('DatabaseSection', 'database.dbname')
+    try :
+        result = pd.read_sql(f"SELECT * from {dbname}.dbo.TvShowsAndMoviesWithRating", conn)
+    except :
+        print("The table TvShowsAndMoviesWithRating will be created, please wait...")
+        dataset.run_etl()
+        result = pd.read_sql(f"SELECT * from {dbname}.dbo.TvShowsAndMoviesWithRating", conn)
 else:
     result = pd.read_csv('datos/resultado.csv')
 
@@ -26,7 +32,8 @@ def get_content_info(content_name):
 def row_to_json(dataframeRow):
     json = {'title': dataframeRow.title,
             'type': dataframeRow.type,
-            'release_year': dataframeRow.release_year,
+            'description': dataframeRow.description,
+            'release_year': str(dataframeRow.release_year),
             'production_countries' : dataframeRow.production_countries,
             'runtime': dataframeRow.runtime,
             'imdb_rating': dataframeRow.imdb_rating,

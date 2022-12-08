@@ -8,6 +8,10 @@ app = Flask(__name__)
 config = configparser.RawConfigParser()
 config.read('application.properties')
 
+@app.route('/')
+def home():
+  return render_template('home_page.html')
+
 @app.route('/whereToWatch/<contentname>')
 def where_to_watch(contentname):
   #returns the username

@@ -7,9 +7,13 @@ Se deben instalar las siguientes dependencias mediante el comando pip:
 - configparser
 
 Para ejecutar el programa, primero se debe configurar el archivo application.properties. 
+
 [DatabaseSection]
+
 database.servername=[Nombre del servidor que aloja las tablas con los datos cargados]
+
 database.dbname=[Nombre de la base de datos de la cual se leerán los datos y a la cual se cargará la tabla integrada y la tabla de provenance]
+
 database.driver=[Driver]
 
 use.database=[True, si se desea ejecutar utilizando base de datos; False, si se desea realizar todo el flujo utilizando únicamente los archivos .CSV de la carpeta "datos".]

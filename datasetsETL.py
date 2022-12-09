@@ -42,19 +42,10 @@ def transform(netflix, disney, imdbMovies, imdbSeries):
     "TvShowsAndMoviesWithRating_title", "TvShowsAndMoviesWithRating_type", "TvShowsAndMoviesWithRating_description", "TvShowsAndMoviesWithRating_release_year", 
     "TvShowsAndMoviesWithRating_age_certification", "TvShowsAndMoviesWithRating_productionCountry", 
     "TvShowsAndMoviesWithRating_runtime"]
-  #  provenance_columns = {"N_title": netflix.title, "N_type": netflix.type, "N_release_year": netflix.release_year, 
-  #                       "N_age_certification": netflix.age_certification, "N_production_countries" : netflix.production_countries, 
-  #                      "N_runtime": netflix.runtime,"N_seasons": netflix.seasons, "D_title": disney.title, "D_type": disney.type,
-  #                       "D_release_year": disney.release_year, "D_rating" : disney.rating, "D_country": disney.country, 
-  #                       "D_duration": disney.duration, "IMDBShows.Series_Title": imdbSeries.Series_Title, "IMDBShows.IMDB_Rating": imdbSeries.IMDB_Rating, 
-  #                       "IMDBMovies.Series_Title": imdbMovies.Series_Title, "IMDBMovies.IMDB_Rating": imdbMovies.IMDB_Rating} 
+
     provenance = pd.DataFrame(columns = provenance_columns)
     provenance2 = pd.DataFrame(columns = provenance_columns)
     # Rename Disney columns to match Netflix, set up auxiliary structures
-    #disney.columns = ['title', 'type', 'description', 'release_year', 'age_certification', 'production_countries', 'runtime']
-    available_on = []
-    netflix["imdb_rating"] = "N/A"
-    disney["imdb_rating"] = "N/A"
 
     # Auxiliary structure to check names
     disney_titles_only = disney[['title']]
@@ -81,9 +72,9 @@ def transform(netflix, disney, imdbMovies, imdbSeries):
             provenance.at[index, "TvShowsAndMoviesWithRating_type"] = 'TV Show'
 
             if row.seasons == 1:
-                netflix.at[index, 'runtime'] = str(int(row.seasons)) + ' Season'
+                provenance.at[index, 'TvShowsAndMoviesWithRating_runtime'] = str(int(row.seasons)) + ' Season'
             else:
-                netflix.at[index, 'runtime'] = str(int(row.seasons)) + ' Seasons'
+                provenance.at[index, 'TvShowsAndMoviesWithRating_runtime'] = str(int(row.seasons)) + ' Seasons'
             # add imdb series score to netflix data set
             if row.title in imdbSeries[['Series_Title']].values:
                 indice = imdbSeries.index[imdbSeries['Series_Title'] == row.title].tolist()
@@ -99,7 +90,6 @@ def transform(netflix, disney, imdbMovies, imdbSeries):
                 provenance.at[index, "IMDBMovies_IMDB_Rating"] = imdbMovies.loc[indice[0], 'IMDB_Rating']
 
         if str(row.title).lower() in disney_titles_only['title'].values:
-            available_on.append("Netflix, Disney+")
             indice = disney_titles_only.index[disney_titles_only['title'] == str(row.title).lower()].tolist()
             provenance.at[index, "D_title"] = disney.loc[indice[0], 'title']
             provenance.at[index, "D_type"] = disney.loc[indice[0], 'type']
@@ -112,7 +102,6 @@ def transform(netflix, disney, imdbMovies, imdbSeries):
             disney.drop(index=indice[0], inplace=True)
         else:
             provenance.at[index, "TvShowsAndMoviesWithRating_available_on"] = "Netflix"
-            available_on.append("Netflix")
 
     for index, row in disney.iterrows():
 
@@ -145,7 +134,6 @@ def transform(netflix, disney, imdbMovies, imdbSeries):
                 provenance2.at[index, "IMDBMovies_IMDB_Rating"] = imdbSeries.loc[indice[0], 'IMDB_Rating']
                 provenance2.at[index, "TvShowsAndMoviesWithRating_imdb_rating"] = imdbMovies.loc[indice[0], 'IMDB_Rating']
 
-    netflix = netflix.assign(available_on=available_on).drop('seasons', axis=1)
     provenance2['TvShowsAndMoviesWithRating_available_on'] = 'Disney+'
     provenance_result = pd.concat([provenance, provenance2], ignore_index=True)      
 
@@ -154,12 +142,10 @@ def transform(netflix, disney, imdbMovies, imdbSeries):
                        'TvShowsAndMoviesWithRating_production_countries', 'TvShowsAndMoviesWithRating_runtime', 
                        'TvShowsAndMoviesWithRating_imdb_rating',
                        'TvShowsAndMoviesWithRating_available_on']]
-    print("PROVENANCE!: ")
    
     result.columns = ['title', 'type', 'description', 'release_year', 'age_certification', 'production_countries', 'runtime', 'imdb_rating', 'available_on']  
     result = result.fillna(value="")
     provenance_result = provenance_result.fillna(value="")
-    print(result)
     return result, provenance_result
 
 def load(result, provenance):

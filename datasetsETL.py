@@ -36,10 +36,10 @@ def transform(netflix, disney, imdbMovies, imdbSeries):
     print("Tansforming...")
 
     #building provenance table
-    provenance_columns = ["N_title", "N_type", "N_release_year", "N_age_certification", "N_production_countries", 
-    "N_runtime", "N_seasons", "D_title", "D_type", "D_release_year", "D_rating", "D_country", "D_duration", 
+    provenance_columns = ["N_title", "N_type", "N_description", "N_release_year", "N_age_certification", "N_production_countries", 
+    "N_runtime", "N_seasons", "D_title", "D_type", "D_description","D_release_year", "D_rating", "D_country", "D_duration", 
     "IMDBShows.Series_Title", "IMDBShows.IMDB_Rating", "IMDBMovies.IMDB_Rating","IMDBMovies.Series_Title", 
-    "TvShowsAndMoviesWithRating_title", "TvShowsAndMoviesWithRating_type", "TvShowsAndMoviesWithRating_release_year", 
+    "TvShowsAndMoviesWithRating_title", "TvShowsAndMoviesWithRating_type", "TvShowsAndMoviesWithRating_description", "TvShowsAndMoviesWithRating_release_year", 
     "TvShowsAndMoviesWithRating_age_certification", "TvShowsAndMoviesWithRating_productionCountry", 
     "TvShowsAndMoviesWithRating_runtime"]
   #  provenance_columns = {"N_title": netflix.title, "N_type": netflix.type, "N_release_year": netflix.release_year, 
@@ -102,6 +102,12 @@ def transform(netflix, disney, imdbMovies, imdbSeries):
             available_on.append("Netflix, Disney+")
             indice = disney_titles_only.index[disney_titles_only['title'] == str(row.title).lower()].tolist()
             provenance.at[index, "D_title"] = disney.loc[indice[0], 'title']
+            provenance.at[index, "D_type"] = disney.loc[indice[0], 'type']
+            provenance.at[index, "D_description"] = disney.loc[indice[0], 'description']
+            provenance.at[index, "D_release_year"] = disney.loc[indice[0], 'release_year']
+            provenance.at[index, "D_rating"] = disney.loc[indice[0], 'rating']
+            provenance.at[index, "D_country"] = disney.loc[indice[0], 'country']
+            provenance.at[index, "D_duration"] = disney.loc[indice[0], 'duration']
             provenance.at[index, "TvShowsAndMoviesWithRating_available_on"] = "Netflix, Disney+"
             disney.drop(index=indice[0], inplace=True)
         else:
@@ -207,7 +213,7 @@ def build_provenance_table(result):
                             N_title VARCHAR(200),
                             N_description VARCHAR(2000),
                             N_type VARCHAR(10),
-                            N_release_year INT,
+                            N_release_year VARCHAR(10),
                             N_age_certification VARCHAR(50),
                             N_production_countries VARCHAR(500),
                             N_runtime VARCHAR(50),
@@ -215,14 +221,14 @@ def build_provenance_table(result):
                             D_title VARCHAR(200),
                             D_type VARCHAR(10),
                             D_description VARCHAR(2000),
-                            D_release_year INT,
+                            D_release_year VARCHAR(10),
                             D_rating VARCHAR(50),
                             D_country VARCHAR(500),
                             D_duration VARCHAR(50),
                             TvShowsAndMoviesWithRating_title VARCHAR(200),
                             TvShowsAndMoviesWithRating_type VARCHAR(10),
                             TvShowsAndMoviesWithRating_description VARCHAR(2000),
-                            TvShowsAndMoviesWithRating_release_year INT,
+                            TvShowsAndMoviesWithRating_release_year VARCHAR(10),
                             TvShowsAndMoviesWithRating_age_certification VARCHAR(50),
                             TvShowsAndMoviesWithRating_production_countries VARCHAR(500),
                             TvShowsAndMoviesWithRating_runtime VARCHAR(50),
@@ -232,33 +238,33 @@ def build_provenance_table(result):
                             """)
         conn.commit()
         for index, row in result.iterrows():
-            cursor.execute(f"""INSERT INTO {dbname}_dbo_Provenance (N_title VARCHAR(200),
-                            N_description VARCHAR(2000),
-                            N_type VARCHAR(10),
-                            N_release_year INT,
-                            N_age_certification VARCHAR(50),
-                            N_production_countries VARCHAR(500),
-                            N_runtime VARCHAR(50),
-                            N_seasons VARCHAR(10),
-                            D_title VARCHAR(200),
-                            D_type VARCHAR(10),
-                            D_description VARCHAR(2000),
-                            D_release_year INT,
-                            D_rating VARCHAR(50),
-                            D_country VARCHAR(500),
-                            D_duration VARCHAR(50),
-                            TvShowsAndMoviesWithRating_title VARCHAR(200),
-                            TvShowsAndMoviesWithRating_type VARCHAR(10),
-                            TvShowsAndMoviesWithRating_description VARCHAR(2000),
-                            TvShowsAndMoviesWithRating_release_year INT,
-                            TvShowsAndMoviesWithRating_age_certification VARCHAR(50),
-                            TvShowsAndMoviesWithRating_production_countries VARCHAR(500),
-                            TvShowsAndMoviesWithRating_runtime VARCHAR(50),
-                            TvShowsAndMoviesWithRating_imdb_rating VARCHAR(10),
-                            TvShowsAndMoviesWithRating_available_on VARCHAR(50)) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            cursor.execute(f"""INSERT INTO {dbname}.dbo.Provenance (N_title,
+                            N_type,
+                            N_description,
+                            N_release_year,
+                            N_age_certification,
+                            N_production_countries,
+                            N_runtime,
+                            N_seasons,
+                            D_title,
+                            D_type,
+                            D_description,
+                            D_release_year,
+                            D_rating,
+                            D_country,
+                            D_duration,
+                            TvShowsAndMoviesWithRating_title,
+                            TvShowsAndMoviesWithRating_type,
+                            TvShowsAndMoviesWithRating_description,
+                            TvShowsAndMoviesWithRating_release_year,
+                            TvShowsAndMoviesWithRating_age_certification,
+                            TvShowsAndMoviesWithRating_production_countries,
+                            TvShowsAndMoviesWithRating_runtime,
+                            TvShowsAndMoviesWithRating_imdb_rating,
+                            TvShowsAndMoviesWithRating_available_on) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                             row['N_title'], row['N_type'], row['N_description'], row['N_release_year'], row['N_age_certification'],                     
                             row['N_production_countries'], row['N_runtime'], row['N_seasons'], row['D_title'], 
-                            row['D_type'], row['D_description'], row['D_release_year'], row['D_rating'],
+                            row['D_type'], row['D_description'], str(row['D_release_year']), row['D_rating'],
                             row['D_country'], row['D_duration'], row['TvShowsAndMoviesWithRating_title'], 
                             row['TvShowsAndMoviesWithRating_type'], row['TvShowsAndMoviesWithRating_description'], 
                             row['TvShowsAndMoviesWithRating_release_year'], 

@@ -181,7 +181,7 @@ def load(result, provenance):
         cursor.close()
         
     else:
-        result.to_csv('datos/resultado.csv')
+        result.to_csv('datos/TvShowsAndMoviesWithRating.csv')
 
 
 def build_provenance_table(result):

@@ -38,7 +38,7 @@ def transform(netflix, disney, imdbMovies, imdbSeries):
     #building provenance table
     provenance_columns = ["N_title", "N_type", "N_description", "N_release_year", "N_age_certification", "N_production_countries", 
     "N_runtime", "N_seasons", "D_title", "D_type", "D_description","D_release_year", "D_rating", "D_country", "D_duration", 
-    "IMDBShows.Series_Title", "IMDBShows.IMDB_Rating", "IMDBMovies.IMDB_Rating","IMDBMovies.Series_Title", 
+    "IMDBShows_Series_Title", "IMDBShows_IMDB_Rating", "IMDBMovies.IMDB_Rating","IMDBMovies.Series_Title", 
     "TvShowsAndMoviesWithRating_title", "TvShowsAndMoviesWithRating_type", "TvShowsAndMoviesWithRating_description", "TvShowsAndMoviesWithRating_release_year", 
     "TvShowsAndMoviesWithRating_age_certification", "TvShowsAndMoviesWithRating_productionCountry", 
     "TvShowsAndMoviesWithRating_runtime"]
@@ -87,16 +87,16 @@ def transform(netflix, disney, imdbMovies, imdbSeries):
             # add imdb series score to netflix data set
             if row.title in imdbSeries[['Series_Title']].values:
                 indice = imdbSeries.index[imdbSeries['Series_Title'] == row.title].tolist()
-                provenance.at[index, "IMDBShows.Series_Title"] = row.title
-                provenance.at[index, "IMDBShows.IMDB_Rating"] = imdbSeries.loc[indice[0], 'IMDB_Rating']
+                provenance.at[index, "IMDBShows_Series_Title"] = row.title
+                provenance.at[index, "IMDBShows_IMDB_Rating"] = imdbSeries.loc[indice[0], 'IMDB_Rating']
         else:
             provenance.at[index, "TvShowsAndMoviesWithRating_type"] = "Movie"
             provenance.at[index, "TvShowsAndMoviesWithRating_runtime"] = str(row.runtime) + ' min'
             # add imdb movies score to netflix data set
             if row.title in imdbMovies[['Series_Title']].values:
                 indice = imdbMovies.index[imdbMovies['Series_Title'] == row.title].tolist()
-                provenance.at[index, "IMDBMovies.Series_Title"] = row.title
-                provenance.at[index, "IMDBMovies.IMDB_Rating"] = imdbMovies.loc[indice[0], 'IMDB_Rating']
+                provenance.at[index, "IMDBMovies_Series_Title"] = row.title
+                provenance.at[index, "IMDBMovies_IMDB_Rating"] = imdbMovies.loc[indice[0], 'IMDB_Rating']
 
         if str(row.title).lower() in disney_titles_only['title'].values:
             available_on.append("Netflix, Disney+")
@@ -134,15 +134,15 @@ def transform(netflix, disney, imdbMovies, imdbSeries):
         if row.type == 'TV Show':
             if row.title in imdbSeries[['Series_Title']].values:
                 indice = imdbSeries.index[imdbSeries['Series_Title'] == row.title].tolist()
-                provenance2.at[index, "IMDBShows.Series_Title"] = row.title
-                provenance2.at[index, "IMDBShows.IMDB_Rating"] = imdbSeries.loc[indice[0], 'IMDB_Rating']
+                provenance2.at[index, "IMDBShows_Series_Title"] = row.title
+                provenance2.at[index, "IMDBShows_IMDB_Rating"] = imdbSeries.loc[indice[0], 'IMDB_Rating']
                 provenance2.at[index, "TvShowsAndMoviesWithRating_imdb_rating"] = imdbSeries.loc[indice[0], 'IMDB_Rating']
         # add imdb movies score to disney data set
         else:
             if row.title in imdbMovies[['Series_Title']].values:
                 indice = imdbMovies.index[imdbMovies['Series_Title'] == row.title].tolist()
-                provenance2.at[index, "IMDBMovies.Series_Title"] = row.title
-                provenance2.at[index, "IMDBMovies.IMDB_Rating"] = imdbSeries.loc[indice[0], 'IMDB_Rating']
+                provenance2.at[index, "IMDBMovies_Series_Title"] = row.title
+                provenance2.at[index, "IMDBMovies_IMDB_Rating"] = imdbSeries.loc[indice[0], 'IMDB_Rating']
                 provenance2.at[index, "TvShowsAndMoviesWithRating_imdb_rating"] = imdbMovies.loc[indice[0], 'IMDB_Rating']
 
     netflix = netflix.assign(available_on=available_on).drop('seasons', axis=1)
@@ -172,7 +172,6 @@ def load(result, provenance):
         cursor = conn.cursor()
         cursor.execute(f""" IF OBJECT_ID(N'{dbname}.dbo.TvShowsAndMoviesWithRating', N'U') IS NOT NULL  
                       DROP TABLE {dbname}.dbo.TvShowsAndMoviesWithRating""")
-        #IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='TvShowsAndMoviesWithRating' and xtype='U'
         conn.commit()
         cursor.execute(f"""CREATE TABLE TvShowsAndMoviesWithRating (
                             title VARCHAR(200),
@@ -207,7 +206,6 @@ def build_provenance_table(result):
         cursor = conn.cursor()
         cursor.execute(f""" IF OBJECT_ID(N'{dbname}.dbo.Provenance', N'U') IS NOT NULL  
                         DROP TABLE {dbname}.dbo.Provenance""")
-        #IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='TvShowsAndMoviesWithRating' and xtype='U'
         conn.commit()
         cursor.execute(f"""CREATE TABLE Provenance (
                             N_title VARCHAR(200),
@@ -225,6 +223,10 @@ def build_provenance_table(result):
                             D_rating VARCHAR(50),
                             D_country VARCHAR(500),
                             D_duration VARCHAR(50),
+                            IMDBShows_Series_Title VARCHAR(200), 
+                            IMDBShows_IMDB_Rating VARCHAR(10),
+                            IMDBMovies_Series_Title VARCHAR(200), 
+                            IMDBMovies_IMDB_Rating VARCHAR(10), 
                             TvShowsAndMoviesWithRating_title VARCHAR(200),
                             TvShowsAndMoviesWithRating_type VARCHAR(10),
                             TvShowsAndMoviesWithRating_description VARCHAR(2000),
@@ -253,6 +255,10 @@ def build_provenance_table(result):
                             D_rating,
                             D_country,
                             D_duration,
+                            IMDBShows_Series_Title, 
+                            IMDBShows_IMDB_Rating,
+                            IMDBMovies_Series_Title, 
+                            IMDBMovies_IMDB_Rating, 
                             TvShowsAndMoviesWithRating_title,
                             TvShowsAndMoviesWithRating_type,
                             TvShowsAndMoviesWithRating_description,
@@ -261,11 +267,14 @@ def build_provenance_table(result):
                             TvShowsAndMoviesWithRating_production_countries,
                             TvShowsAndMoviesWithRating_runtime,
                             TvShowsAndMoviesWithRating_imdb_rating,
-                            TvShowsAndMoviesWithRating_available_on) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                            TvShowsAndMoviesWithRating_available_on) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                             row['N_title'], row['N_type'], row['N_description'], row['N_release_year'], row['N_age_certification'],                     
                             row['N_production_countries'], row['N_runtime'], row['N_seasons'], row['D_title'], 
                             row['D_type'], row['D_description'], str(row['D_release_year']), row['D_rating'],
-                            row['D_country'], row['D_duration'], row['TvShowsAndMoviesWithRating_title'], 
+                            row['D_country'], row['D_duration'], 
+                            row['IMDBShows_Series_Title'], row['IMDBShows_IMDB_Rating'],
+                            row['IMDBMovies_Series_Title'], row['IMDBMovies_IMDB_Rating'],
+                            row['TvShowsAndMoviesWithRating_title'], 
                             row['TvShowsAndMoviesWithRating_type'], row['TvShowsAndMoviesWithRating_description'], 
                             row['TvShowsAndMoviesWithRating_release_year'], 
                             row['TvShowsAndMoviesWithRating_age_certification'],
@@ -278,6 +287,5 @@ def build_provenance_table(result):
 
 def run_etl():
     netflix, disney, imdbMovies, imdbSeries = extract()
-    #build_provenance_table(netflix, disney, imdbMovies, imdbSeries)
     result, provenance = transform(netflix, disney, imdbMovies, imdbSeries)
     load(result, provenance)

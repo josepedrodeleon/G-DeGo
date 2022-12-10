@@ -80,6 +80,7 @@ def transform(netflix, disney, imdbMovies, imdbSeries):
                 indice = imdbSeries.index[imdbSeries['Series_Title'] == row.title].tolist()
                 provenance.at[index, "IMDBShows_Series_Title"] = row.title
                 provenance.at[index, "IMDBShows_IMDB_Rating"] = imdbSeries.loc[indice[0], 'IMDB_Rating']
+                provenance.at[index, "TvShowsAndMoviesWithRating_imdb_rating"] = imdbSeries.loc[indice[0], 'IMDB_Rating']
         else:
             provenance.at[index, "TvShowsAndMoviesWithRating_type"] = "Movie"
             provenance.at[index, "TvShowsAndMoviesWithRating_runtime"] = str(row.runtime) + ' min'
@@ -88,6 +89,7 @@ def transform(netflix, disney, imdbMovies, imdbSeries):
                 indice = imdbMovies.index[imdbMovies['Series_Title'] == row.title].tolist()
                 provenance.at[index, "IMDBMovies_Series_Title"] = row.title
                 provenance.at[index, "IMDBMovies_IMDB_Rating"] = imdbMovies.loc[indice[0], 'IMDB_Rating']
+                provenance.at[index, "TvShowsAndMoviesWithRating_imdb_rating"] = imdbMovies.loc[indice[0], 'IMDB_Rating']
 
         if str(row.title).lower() in disney_titles_only['title'].values:
             indice = disney_titles_only.index[disney_titles_only['title'] == str(row.title).lower()].tolist()
